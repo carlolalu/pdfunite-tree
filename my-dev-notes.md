@@ -23,5 +23,11 @@ Notice that this solution is complete, meaning that all the plan is outlined.
 
 ### if Rust
 
-Rust is ofc one of the choices. The problem is that the libraries in Rust are not completely exaustive. The most complete one is `lopdf`, but it is absolutely not documented and more of a general rust transposition of pdfs logic in Rust, rather than a tool which allows to work efficientely with such files. Otherwise there is `pdfium-render`, but it is not clear to me if the features of it do allow for a manipulation of the ToC of a file.
+Rust is ofc one of the choices. The problem is that the libraries in Rust are not completely exaustive:
+
+- The most complete one is `lopdf`, but it is absolutely not documented and more of a general rust transposition of pdfs logic in Rust, rather than a tool which allows to work efficientely with such files. 
+
+- Otherwise there is `pdfium-render`, but it is not clear to me if the features of it do allow for a manipulation of the ToC of a file. Together with that there is the fact that such library does not include pdfium itself, which must be downloaded autonomously. This is a bad idea if I want to build a tool which can simply be commpiled with `cargo build` and then used.
+
+
 
