@@ -25,3 +25,7 @@ Notice that this solution is complete, meaning that all the plan is outlined.
 
 Rust is ofc one of the choices. The problem is that the libraries in Rust are not completely exaustive. The most complete one is `lopdf`, but it is absolutely not documented and more of a general rust transposition of pdfs logic in Rust, rather than a tool which allows to work efficientely with such files. Otherwise there is `pdfium-render`, but it is not clear to me if the features of it do allow for a manipulation of the ToC of a file.
 
+## Extra
+
+1. Add a feature to add a Page (or a series of pages) with the table of contents in the beginning.
+2. write a small script to convert all your xournal files to pdf: https://github.com/xournalpp/xournalpp/issues/681, and then concatenate this alltogether.
