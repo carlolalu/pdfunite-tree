@@ -1,4 +1,3 @@
-
 use anyhow::{Result, anyhow};
 use clap::Subcommand;
 use lopdf::{
@@ -7,47 +6,59 @@ use lopdf::{
     dictionary,
 };
 use std::path::Path;
+use clap::Parser;
 
 const DEV_PLAYGROUND_DIR: &str = "dev-playground";
 
+/// Merge together all the PDFs in a folder and its subfolders (max X levels) into a single document
+/// provided with a ToC (Table fo Contents) reflecting the structure of tree of the folder and its descendants.
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Directory containing the pdfs. If a development playground subcommand is called
+    /// such path becomes the target on which the subcommand is called
+    #[arg(short, long)]
+    target_path: String,
+    #[command(subcommand)]
+    dev_playground_command: DevCommand,
+}
+
+
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+
+    execute_cmd(&cli.dev_playground_command, &cli.target_path)?;
+
+    Ok(())
+}
+
+
 
 #[derive(Subcommand, Debug)]
-pub enum DevCommands {
+pub enum DevCommand {
     /// Generate a basic PDF
     GenerateBasicPDF {
-        /// Document name
-        #[arg(short, long)]
-        name: String,
         /// Number of pages
         #[arg(short, long, default_value_t = 2)]
         pages: u8,
     },
     /// Equip an already existing PDF file with a trivial ToC (each page is bookmarked in the Outline)
-    EquipWithTrivialToc {
-        /// Document path
-        #[arg(short, long)]
-        doc_path: String,
-    },
-    Experiment {
-        /// Document path
-        #[arg(short, long)]
-        doc_path: String,
-    },
+    EquipWithTrivialToc,
+    /// Equip an already existing PDF file with a trivial ToC (each page is bookmarked in the Outline)
+    /// but with high level functions
+    ExperimentEquipTrivialToc,
 }
 
-pub fn execute_cmd(playground_cmd: &DevCommands) -> Result<()> {
-        match playground_cmd {
-            DevCommands::GenerateBasicPDF { name, pages } =>
-                generate_basic_pdf(name, *pages),
-            DevCommands::EquipWithTrivialToc { doc_path } => 
-                equip_with_trivial_toc(doc_path),
-            
-            DevCommands::Experiment { doc_path } => 
-                experiment_to_equip_trivial_doc(doc_path),
-        
-        }
-}
+pub fn execute_cmd(playground_cmd: &DevCommand, target_path: &str) -> Result<()> {
+    // todo: add verification that the target path is in the playground
+    // todo: convert every 'string' to a 'impl AsRef<Path>' and act consequently
 
+    match playground_cmd {
+        DevCommand::GenerateBasicPDF { pages } => generate_basic_pdf(target_path, *pages),
+        DevCommand::EquipWithTrivialToc => equip_with_trivial_toc(target_path),
+        DevCommand::ExperimentEquipTrivialToc => experiment_to_equip_trivial_doc(target_path),
+    }
+}
 
 fn experiment_to_equip_trivial_doc(doc_path: &str) -> Result<()> {
     let mut doc = Document::load(doc_path)?;

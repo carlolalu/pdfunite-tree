@@ -1,5 +1,3 @@
-mod dev_playground;
-
 use anyhow::Result;
 use clap::Parser;
 
@@ -8,20 +6,14 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    /// Folder containing the pdfs
+    /// Directory containing the pdfs. If a development playground subcommand is called
+    /// such path becomes the target on which the subcommand is called
     #[arg(short, long)]
-    root_pdfs: Option<String>,
-    #[command(subcommand)]
-    dev_playground_command: Option<dev_playground::DevCommands>,
+    target_path: String,
 }
-
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-
-    if let Some(playground_cmd) = cli.dev_playground_command {
-        dev_playground::execute_cmd(&playground_cmd)?;
-    }
 
     Ok(())
 }
