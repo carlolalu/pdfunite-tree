@@ -19,13 +19,20 @@ If I want also the initial index I can write a markdown file with such index, re
 
 Notice that this solution is complete, meaning that all the plan is outlined.
 
-## which language and library should I use in case I adopt solution 2?
+## solution with lopdf and Rust
 
-### if Rust
+1. Parse the cli option (flag to add the index page(s) in the beginning, flag to convert automatically the `xopp` files encountered)
+2. Pass the cli to a run function
+3. the run function creates a main doc and initialises it. Then passes the main_doc, the root folder and the options to a function called 'merge_from_directory'. This is meant to act as the recersive function on tree nodes, on which we need a condition to halt recursion. 
 
-Rust is ofc one of the choices. The problem is that the libraries in Rust are not completely exaustive. The most complete one is `lopdf`, but it is absolutely not documented and more of a general rust transposition of pdfs logic in Rust, rather than a tool which allows to work efficientely with such files. Otherwise there is `pdfium-render`, but it is not clear to me if the features of it do allow for a manipulation of the ToC of a file.
+Function which acts on nodes:
+    If encounters a files calls the function to be called on leaves: merge_doc (main_doc, parent_bookmark, file (as path or as name?), flag for xopp files)
+    if encounters a directory or a symlink: it calls itself if an halt condition of max_tree_depth is respected, otherwise it yields error
+
+Function which acts on leafs:
+    Checks that the file is `.pdf` marked and tries to open it
 
 ## Extra
 
 1. Add a feature to add a Page (or a series of pages) with the table of contents in the beginning.
-2. write a small script to convert all your xournal files to pdf: https://github.com/xournalpp/xournalpp/issues/681, and then concatenate this alltogether.
+2. write a small script to convert all your xournal files to pdf: https://github.com/xournalpp/xournalpp/issues/681, and then concatenate this alltogether. But this does not seem a good idea: my notes in xopp files do have an index in the beginnning, and this needs to be extrapolated and followed to create an outline following the personalised and written by hand content with `pdftoc.gen`
