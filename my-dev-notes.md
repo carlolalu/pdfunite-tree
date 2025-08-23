@@ -46,3 +46,13 @@ How to implement the tests? I need a way to validate the PDFs and also to check 
     * pdfoutliner
 
 Any of these, if added, must be declared as a requirement for the tests on the README.md
+
+## PDF tools which I would need
+
+- A functionality to visualise ALL the children of the catalog of a pdf file. An additional tool to visualise such tree for a whole filesystem, and in red evidentiated all the components which are not supported, and maybe in orange the components which are not particularly relevant, as `OpenAction`, which, if I well recall, tells only which action to perform when the PDF file is view, but it is not a fundamental information (often tells only the way you should visualise a pdf when you open it)
+
+- A `pdf-toc-splitter`, i.e. a tool doing exactly the opposite of what I do in `pdfunite3`, separating a pdf into its components evidentiated in the Outline. But I wanna build my own: the actual `pdf-toc-splitter` embedds a pdf toc for each of the output files, and this is a problem for me. In fact often I want to modify a piece of my pdf making an annotation with Xournal++, and the procedure would be:
+    1. separate the united pdf into its components according to the toc
+    2. annotate the single component wiht Xournal++
+    3. recompose the file with my tool
+The last passage cannot be performed by my tool, if the components do have already an Outline. Besides, to program this tool should not be particularly nasty, because I would not need the option `level` of pdf-toc-splitter: I could simply split to the maximum level of the bookmarks. Notice also that if I would need an intermediate level I could always decompose completely the pdf into its atomic components, and then compose back only part of those with my original tool `pdfunite3`.
