@@ -4,11 +4,15 @@ use anyhow::{Result, anyhow};
 use clap::Parser;
 use lazy_static::lazy_static;
 use log::trace;
-use lopdf::{Document, Object, dictionary};
+use lopdf::{Bookmark, Document, Object, dictionary};
 use std::path::Path;
 
 const MAX_DEPTH_PDF_TREE: u8 = 6;
 const DEFAULT_OUTPUT_SUFFIX: &str = "-united.pdf";
+
+const DEFAULT_TEXT_FORMAT: u32 = 0;
+const UNINITIALISED_PAGE_ID: (u32, u16) = (0, 0);
+const BLACK_COLOR_RGB: [f32; 3] = [0f32; 3];
 
 lazy_static! {
     static ref ALLOWED_CATALOG_CHILDREN_FOR_INPUT_PDF: Vec<String> =
@@ -79,7 +83,19 @@ fn merge_tree(target_dir_path: impl AsRef<Path>, output_path: impl AsRef<Path>) 
     initialise_doc_with_null_pages(&mut main_doc)?;
 
     trace!("Start the merging process");
-    merge_from_internal_node(&mut main_doc, target_dir_path, 0)?;
+    merge_from_internal_node(&mut main_doc, target_dir_path, 0, None)?;
+
+    trace!("Build the Outline of the main document and append it to the catalog");
+    main_doc.adjust_zero_pages();
+    let outlines_id = main_doc.build_outline().ok_or(anyhow!(
+        "The Outlines object for the document obtained is empty"
+    ))?;
+    let catalog = main_doc.catalog_mut()?;
+    catalog.set("Outlines", Object::Reference(outlines_id));
+    catalog.set(
+        "PageMode",
+        Object::String("UseOutlines".into(), lopdf::StringFormat::Literal),
+    );
 
     trace!(r##"Save the main document as '{}'"##, output_path.display());
 
@@ -92,6 +108,7 @@ fn merge_tree(target_dir_path: impl AsRef<Path>, output_path: impl AsRef<Path>) 
         let mut buffer = Vec::new();
         main_doc.save_modern(&mut buffer)?;
         std::fs::write(output_path, buffer)?;
+        println!("Output document saved as '{}'", output_path.display());
     }
 
     Ok(())
@@ -119,6 +136,7 @@ fn merge_from_internal_node(
     main_doc: &mut Document,
     directory: impl AsRef<Path>,
     parent_level: u8,
+    parent_bookmark_id: Option<u32>,
 ) -> Result<()> {
     trace!(
         "Merge the node (=symlink or directory) '{}'",
@@ -132,6 +150,26 @@ fn merge_from_internal_node(
         ));
     }
 
+    trace!("Craft and add node bookmark");
+    let node_bookmark_id = {
+        let dir_name = directory
+            .as_ref()
+            .file_name()
+            .ok_or(anyhow!(
+                "Could not get name of the directory '{}'",
+                directory.as_ref().display()
+            ))?
+            .to_string_lossy()
+            .to_string();
+        let node_bookmark = Bookmark::new(
+            dir_name,
+            BLACK_COLOR_RGB,
+            DEFAULT_TEXT_FORMAT,
+            UNINITIALISED_PAGE_ID,
+        );
+        Some(main_doc.add_bookmark(node_bookmark, parent_bookmark_id))
+    };
+
     let mut entries = std::fs::read_dir(directory.as_ref())?
         .map(|res| match res {
             Ok(dir_entry) => Ok(dir_entry),
@@ -144,16 +182,20 @@ fn merge_from_internal_node(
         let file_type = entry.file_type()?;
 
         if file_type.is_file() {
-            merge_from_leaf(main_doc, entry.path())?;
+            merge_from_leaf(main_doc, entry.path(), node_bookmark_id)?;
         } else {
-            merge_from_internal_node(main_doc, entry.path(), parent_level + 1)?;
+            merge_from_internal_node(main_doc, entry.path(), parent_level + 1, node_bookmark_id)?;
         }
     }
 
     Ok(())
 }
 
-fn merge_from_leaf(main_doc: &mut Document, path_doc_to_merge: impl AsRef<Path>) -> Result<()> {
+fn merge_from_leaf(
+    main_doc: &mut Document,
+    path_doc_to_merge: impl AsRef<Path>,
+    parent_bookmark_id: Option<u32>,
+) -> Result<()> {
     trace!(
         "Merge the leaf (=PDF file) '{}'",
         path_doc_to_merge.as_ref().display()
@@ -183,6 +225,7 @@ fn merge_from_leaf(main_doc: &mut Document, path_doc_to_merge: impl AsRef<Path>)
 
     let main_doc_pages_root_reference = main_doc.catalog()?.get(b"Pages")?.as_reference()?;
     let mut num_of_imported_object = 0;
+    let mut first_page_id = None;
 
     for (object_id, mut object) in doc_to_merge.objects {
         match object.type_name().unwrap_or(b"") {
@@ -219,6 +262,13 @@ fn merge_from_leaf(main_doc: &mut Document, path_doc_to_merge: impl AsRef<Path>)
                 }
                 num_of_imported_object += 1;
             }
+            b"Page" => {
+                main_doc.objects.insert(object_id, object);
+                num_of_imported_object += 1;
+                if first_page_id.is_none() {
+                    first_page_id = Some(object_id);
+                }
+            }
             _ => {
                 main_doc.objects.insert(object_id, object);
                 num_of_imported_object += 1;
@@ -229,6 +279,29 @@ fn merge_from_leaf(main_doc: &mut Document, path_doc_to_merge: impl AsRef<Path>)
     trace!("{num_of_imported_object} new objects successfully imported, update max_id counter");
 
     main_doc.max_id += num_of_imported_object;
+
+    trace!("Craft and add leaf bookmark");
+    let name_doc_to_merge = path_doc_to_merge
+        .as_ref()
+        .file_name()
+        .ok_or(anyhow!(
+            "The given path '{}' does not contain a filename",
+            path_doc_to_merge.as_ref().display()
+        ))?
+        .to_string_lossy()
+        .to_string();
+    let first_page_id = first_page_id.ok_or(anyhow!(
+        "The id of the first page of the document '{}' could not be found",
+        path_doc_to_merge.as_ref().display()
+    ))?;
+
+    let new_bookmark = Bookmark::new(
+        name_doc_to_merge,
+        BLACK_COLOR_RGB,
+        DEFAULT_TEXT_FORMAT,
+        first_page_id,
+    );
+    main_doc.add_bookmark(new_bookmark, parent_bookmark_id);
 
     Ok(())
 }
@@ -275,7 +348,7 @@ mod test {
             })
             .collect();
 
-        merge_from_leaf(&mut main_doc, leaf_path)?;
+        merge_from_leaf(&mut main_doc, leaf_path, None)?;
 
         previous_pages_main_doc.extend(expected_page_ids_leaf_post_merge.iter());
 
