@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use lopdf::{Document, Object, ObjectId, dictionary};
 
 /// Get a PDF file with minimal features
-pub fn get_basic_pdf_doc(doc_name: &str, pages: u8) -> Result<Document> {
+pub fn get_basic_pdf_doc(doc_name: &str, num_pages: u8) -> Result<Document> {
     if doc_name.contains('/') {
         return Err(anyhow!(
             "The document name provided contains a '/', not allowed!"
@@ -26,16 +26,16 @@ pub fn get_basic_pdf_doc(doc_name: &str, pages: u8) -> Result<Document> {
 
     });
 
-    let pages_ids: Vec<_> = (1..=pages)
+    let pages_ids: Vec<_> = (1..=num_pages)
         .map(|page_number| {
-            append_random_page_to_doc(page_number, doc_name, &pages_root_id, &mut doc)
+            append_random_page_to_doc(page_number, num_pages, doc_name, &pages_root_id, &mut doc)
         })
         .collect::<Result<_>>()?;
 
     let pages = dictionary! {
         "Type" => "Pages",
         "Kids" => pages_ids.iter().map(|&page_id| page_id.into()).collect::<Vec<_>>(),
-        "Count" => pages,
+        "Count" => num_pages,
         "Resources" => resources_id,
         "MediaBox" => vec![0.into(), 0.into(), 595.into(), 842.into()],
     };
@@ -55,6 +55,7 @@ pub fn get_basic_pdf_doc(doc_name: &str, pages: u8) -> Result<Document> {
 
 fn append_random_page_to_doc(
     page_number: u8,
+    total_num_pages: u8,
     doc_name: &str,
     pages_id: &ObjectId,
     doc: &mut Document,
@@ -64,7 +65,7 @@ fn append_random_page_to_doc(
         content::{Content, Operation},
     };
 
-    let page_title = format!("Page {page_number}");
+    let page_title = format!("Page {page_number} of {total_num_pages}");
     let random_text = craft_random_text_of_len(20);
 
     let content = Content {
