@@ -36,3 +36,10 @@ Function which acts on leafs:
 
 1. Add a feature to add a Page (or a series of pages) with the table of contents in the beginning.
 2. write a small script to convert all your xournal files to pdf: https://github.com/xournalpp/xournalpp/issues/681, and then concatenate this alltogether. But this does not seem a good idea: my notes in xopp files do have an index in the beginnning, and this needs to be extrapolated and followed to create an outline following the personalised and written by hand content with `pdftoc.gen`
+3. Make the generation of the outline an optional feature
+
+## Executable names
+
+- for `pdfunite-tree` it would be more optimal to be *maybe* `pdfunite3`, but this could be ambigous, even if shorter. Otherwise
+
+- `gen_rand_pdf` is not really useful to anybody else and it is obvious that the doc generated is random, thus I could call it simply `gen-pdf`
