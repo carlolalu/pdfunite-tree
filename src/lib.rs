@@ -247,6 +247,126 @@ mod test {
     const TEST_DIR: &str = "dev-playground/test";
 
     #[test]
+    fn merge_1_tree_with_3_levels_3_lateral_leaves() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merge_1_tree_with_3_levels_3_lateral_leaves")?;
+        let root_tree = format!("{test_dir}/root_pdfs");
+
+        let identity_function = |n: u8| n;
+        utils::generate_fn_tree_with_levels(&root_tree, 3, 1, 3, 3, &identity_function)?;
+
+        let output_path = format!("{root_tree}.pdf");
+
+        let mut main_doc = get_merged_tree_doc(root_tree, true)?;
+        main_doc.compress();
+        main_doc.save(&output_path)?;
+
+        utils::validate_pdf(&output_path)?;
+        // todo: test the outline with the correct cli from my-dev-notes
+
+        Ok(())
+    }
+
+    #[test]
+    fn merge_2_tree_with_4_levels() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merge_2_tree_with_4_levels")?;
+        let root_tree = format!("{test_dir}/root_pdfs");
+
+        let identity_function = |n: u8| n;
+        utils::generate_fn_tree_with_levels(&root_tree, 3, 2, 0, 4, &identity_function)?;
+
+        let output_path = format!("{root_tree}.pdf");
+        let mut main_doc = get_merged_tree_doc(root_tree, true)?;
+        main_doc.compress();
+        main_doc.save(&output_path)?;
+
+        utils::validate_pdf(&output_path)?;
+        // todo: test the outline with the correct cli from my-dev-notes
+
+        Ok(())
+    }
+
+    #[test]
+    fn merge_linearly_growing_tree_with_3_levels() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merge_linearly_growing_tree_with_3_levels")?;
+        let pdf_dir = format!("{test_dir}/root_pdfs");
+
+        let plus_one = |n: u8| n + 1;
+        utils::generate_fn_tree_with_levels(&pdf_dir, 3, 2, 0, 3, &plus_one)?;
+
+        let output_path = format!("{pdf_dir}.pdf");
+        let mut main_doc = get_merged_tree_doc(pdf_dir, true)?;
+        main_doc.compress();
+        main_doc.save(&output_path)?;
+
+        utils::validate_pdf(&output_path)?;
+        // todo: test the outline with the correct cli from my-dev-notes
+
+        Ok(())
+    }
+
+    #[test]
+    fn merge_linearly_shrinking_tree_with_3_levels_5_lateral_leaves() -> Result<()> {
+        let test_dir =
+            get_virgin_test_dir("merge_linearly_shrinking_tree_with_3_levels_5_lateral_leaves")?;
+        let pdf_dir = format!("{test_dir}/root_pdfs");
+
+        let minus_one = |n: u8| n - 1;
+        utils::generate_fn_tree_with_levels(&pdf_dir, 3, 4, 5, 3, &minus_one)?;
+
+        let output_path = format!("{pdf_dir}.pdf");
+        let mut main_doc = get_merged_tree_doc(pdf_dir, true)?;
+        main_doc.compress();
+        main_doc.save(&output_path)?;
+
+        utils::validate_pdf(&output_path)?;
+        // todo: test the outline with the correct cli from my-dev-notes
+
+        Ok(())
+    }
+
+    #[test]
+    fn merge_linearly_shrinking_tree_with_4_levels_2_lateral_leaves() -> Result<()> {
+        let test_dir =
+            get_virgin_test_dir("merge_linearly_shrinking_tree_with_4_levels_2_lateral_leaves")?;
+        let pdf_dir = format!("{test_dir}/root_pdfs");
+
+        let minus_one = |n: u8| n - 1;
+        utils::generate_fn_tree_with_levels(&pdf_dir, 3, 4, 2, 4, &minus_one)?;
+
+        let output_path = format!("{pdf_dir}.pdf");
+        let mut main_doc = get_merged_tree_doc(pdf_dir, true)?;
+        main_doc.compress();
+        main_doc.save(&output_path)?;
+
+        utils::validate_pdf(&output_path)?;
+        // todo: test the outline with the correct cli from my-dev-notes
+
+        Ok(())
+    }
+
+    #[test]
+    fn merge_exponentially_shrinking_tree_with_3_levels() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merge_exponentially_shrinking_tree_with_3_levels")?;
+        let pdf_dir = format!("{test_dir}/root_pdfs");
+
+        let divide_by_2 = |n: u8| n / 2;
+        utils::generate_fn_tree_with_levels(&pdf_dir, 3, 8, 0, 3, &divide_by_2)?;
+
+        let output_path = format!("{pdf_dir}.pdf");
+        let mut main_doc = get_merged_tree_doc(pdf_dir, true)?;
+        main_doc.compress();
+        main_doc.save(&output_path)?;
+
+        utils::validate_pdf(&output_path)?;
+        // todo: test the outline with the correct cli from my-dev-notes. Suggestion: as an expected outline take the output of `tree`,
+        // or eventually craft your own `tree` command in pure Rust
+        // or transform the tree into the bookmark table and bookmark vector of the lopdf library, checking it against the output of `pdftk merge_2_tree_with_3_levels/root_pdfs.pdf dump_data`
+        // it should not be extramely hard
+
+        Ok(())
+    }
+
+    #[test]
     fn merge_10_pages_leaf_in_main_doc() -> Result<()> {
         println!("Test 'merge_10_pages_leaf_in_main_doc'");
         let test_dir = get_virgin_test_dir("merge_10_pages_leaf_in_main_doc")?;
