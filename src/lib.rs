@@ -1,4 +1,4 @@
-mod utils;
+pub mod utils;
 
 use anyhow::{Result, anyhow};
 use clap::Parser;
