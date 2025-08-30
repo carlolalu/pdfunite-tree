@@ -311,6 +311,68 @@ mod test {
 
     const TEST_DIR: &str = "dev-playground/test";
 
+
+        #[test]
+    fn merge_binary_tree_with_3_levels() -> Result<()> {
+        println!("Test 'merge_binary_tree_with_3_levels'");
+        let test_dir = get_virgin_test_dir("merge_binary_tree_with_3_levels")?;
+
+        let pdf_dir = format!("{test_dir}/root_pdfs");
+
+        utils::generate_n_tree_with_levels(&pdf_dir, 3, 2, 3)?;
+
+        let output_path = format!("{pdf_dir}.pdf");
+        merge_tree(pdf_dir, output_path)?;
+
+        // todo: implement a control which is not manual for the outline
+
+        Ok(())
+    }
+
+    #[test]
+    fn merge_binary_tree_with_4_levels() -> Result<()> {
+        println!("Test 'merge_binary_tree_with_4_levels'");
+        let test_dir = get_virgin_test_dir("merge_binary_tree_with_4_levels")?;
+
+        let pdf_dir = format!("{test_dir}/root_pdfs");
+
+        utils::generate_n_tree_with_levels(&pdf_dir, 4, 2, 3)?;
+
+        let output_path = format!("{pdf_dir}.pdf");
+        merge_tree(pdf_dir, output_path)?;
+
+        // todo: implement a control which is not manual for the outline
+
+        Ok(())
+    }
+
+    #[test]
+    fn merge_linear_tree_4_levels() -> Result<()> {
+        println!("Test 'merge_linear_tree_4_levels'");
+        let test_dir = get_virgin_test_dir("merge_linear_tree_4_levels")?;
+
+        let mut pdf_dir = format!("{test_dir}/root_pdfs");
+        let root_tree = pdf_dir.clone();
+
+        for level in 1..=2 {
+            pdf_dir = format!("{pdf_dir}/level{level}");
+            std::fs::create_dir_all(&pdf_dir)?;
+        }
+
+        let pdf_file_path = format!("{pdf_dir}/pdf");
+        let mut pdf_doc = utils::get_basic_pdf_doc("pdf", 5)?;
+        let mut buffer = Vec::new();
+        pdf_doc.save_modern(&mut buffer)?;
+        std::fs::write(&pdf_file_path, buffer)?;
+
+        let output_path = format!("{root_tree}.pdf");
+        merge_tree(root_tree, output_path)?;
+
+        // todo: implement a control which is not manual for the outline
+
+        Ok(())
+    }
+
     #[test]
     fn merge_10_pages_leaf_in_main_doc() -> Result<()> {
         println!("Test 'merge_10_pages_leaf_in_main_doc'");

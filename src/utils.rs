@@ -1,5 +1,50 @@
 use anyhow::{Result, anyhow};
 use lopdf::{Document, Object, ObjectId, dictionary};
+use std::path::Path;
+
+// Use with caution: an n-tree with l levels has sum(k=0, k=l) {n^k} nodes!
+// Furthermore if each pdf has p pages, this means p*(n^l) pdf pages in total!
+pub fn generate_n_tree_with_levels(
+    root_pdfs: impl AsRef<Path>,
+    num_levels: u8,
+    num_siblings: u8,
+    pages_per_pdf: u8,
+) -> Result<()> {
+    let root_pdfs = root_pdfs.as_ref();
+
+    if std::fs::exists(root_pdfs)? {
+        return Err(anyhow!(
+            "The path '{}' exists already!",
+            root_pdfs.display()
+        ));
+    }
+
+    if num_levels <= 0 {
+        return Ok(());
+    }
+
+    std::fs::create_dir(root_pdfs)?;
+
+    if num_levels == 1 {
+        for sibling in 1..=num_siblings {
+            let pdf_name = format!("pdf_doc{}.pdf", sibling);
+            let pdf_path = format!("{}/{}", root_pdfs.display(), pdf_name);
+
+            let mut pdf_doc = get_basic_pdf_doc(&pdf_name, pages_per_pdf)?;
+
+            let mut buffer = Vec::new();
+            pdf_doc.save_modern(&mut buffer)?;
+            std::fs::write(pdf_path, &buffer)?;
+        }
+    } else {
+        for sibling in 1..=num_siblings {
+            let sibling_path = format!("{}/L{}S{}", root_pdfs.display(), num_levels, sibling);
+            generate_n_tree_with_levels(sibling_path, num_levels - 1, num_siblings, pages_per_pdf)?;
+        }
+    }
+
+    Ok(())
+}
 
 /// Get a PDF file with minimal features
 pub fn get_basic_pdf_doc(doc_name: &str, num_pages: u8) -> Result<Document> {
