@@ -3,7 +3,7 @@ pub mod utils;
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use lazy_static::lazy_static;
-use log::trace;
+use log::{info, trace};
 use lopdf::{Bookmark, Document, Object, dictionary};
 use std::path::Path;
 
@@ -79,13 +79,13 @@ fn merge_tree(target_dir_path: impl AsRef<Path>, output_path: impl AsRef<Path>) 
 
     let mut main_doc = Document::with_version("1.7");
 
-    trace!("Initialising main document");
+    info!("Initialising main document");
     initialise_doc_with_null_pages(&mut main_doc)?;
 
-    trace!("Start the merging process");
+    info!("Start the merging process");
     merge_from_internal_node(&mut main_doc, target_dir_path, 0, None)?;
 
-    trace!("Build the Outline of the main document and append it to the catalog");
+    info!("Build the Outline of the main document and append it to the catalog");
     main_doc.adjust_zero_pages();
     let outlines_id = main_doc.build_outline().ok_or(anyhow!(
         "The Outlines object for the document obtained is empty"
@@ -96,8 +96,6 @@ fn merge_tree(target_dir_path: impl AsRef<Path>, output_path: impl AsRef<Path>) 
         "PageMode",
         Object::String("UseOutlines".into(), lopdf::StringFormat::Literal),
     );
-
-    trace!(r##"Save the main document as '{}'"##, output_path.display());
 
     if std::fs::exists(output_path)? {
         return Err(anyhow!(
@@ -139,7 +137,7 @@ fn merge_from_internal_node(
     parent_bookmark_id: Option<u32>,
 ) -> Result<()> {
     trace!(
-        "Merge the node (=symlink or directory) '{}'",
+        "Merge the node (=symlink or directory) '{}' and add its bookmark",
         directory.as_ref().display()
     );
 
@@ -197,7 +195,7 @@ fn merge_from_leaf(
     parent_bookmark_id: Option<u32>,
 ) -> Result<()> {
     trace!(
-        "Merge the leaf (=PDF file) '{}'",
+        "Merge the leaf (=PDF file) '{}' and add its bookmark",
         path_doc_to_merge.as_ref().display()
     );
 
@@ -275,8 +273,6 @@ fn merge_from_leaf(
             }
         }
     }
-
-    trace!("{num_of_imported_object} new objects successfully imported, update max_id counter");
 
     main_doc.max_id += num_of_imported_object;
 
