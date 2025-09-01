@@ -1,6 +1,17 @@
 use anyhow::{Result, anyhow};
 use lopdf::{Document, Object, ObjectId, dictionary};
 
+pub fn get_catalog_children_names(doc: &Document) -> Result<Vec<String>> {
+    let catalog = doc.catalog()?;
+
+    let catalog_children_names = catalog
+        .iter()
+        .map(|(child_name, _child_object)| Ok(String::from_utf8(child_name.to_vec())?))
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(catalog_children_names)
+}
+
 /// Get a PDF file with minimal features
 pub fn get_basic_pdf_doc(doc_name: &str, num_pages: u8) -> Result<Document> {
     if doc_name.contains('/') {
