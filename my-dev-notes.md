@@ -43,3 +43,17 @@ Function which acts on leafs:
 - for `pdfunite-tree` it would be more optimal to be *maybe* `pdfunite3`, but this could be ambigous, even if shorter. Otherwise
 
 - `gen_rand_pdf` is not really useful to anybody else and it is obvious that the doc generated is random, thus I could call it simply `gen-pdf`
+
+## next ideas:
+
+On a new branch (based on this one) develop this:
+    - transform the `gen_rand_pdf` in a more general `pdf-util-by-me` or some other adapted name, where the generation of random pdfs is a subcommand
+    - on this branch you might want to develop a couple of programs more to: 
+        * visualise which children does catalog have. Example: does catalog have the subtree `/Names`? let us use the cmd line utility to print all those children there
+        * visualise specific subtree of the PDF document as the command tree does. For example if we would like to visualise the subtree `Outlines` we would like to see the subtree of all objects `Outline` with dereferenced locations, title etc.. This might be interesting for the key `Pages` or similar.
+
+    - the programs developed should possibly have most  of the running capabilities in `utils.rs`, and use in the bin only the functinos defined in `lib.rs`
+
+    With these instrument in place I should be able to tackle my most important challenges: 
+    - debug my program (understanding what is wrong in the way I build the outline)
+    - Immediately understand which children does catalog have in my notes, or most of them, so to learn which are the most commmon children that my program should be able to treat (as for examplee `/Names`)
