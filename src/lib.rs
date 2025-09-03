@@ -77,22 +77,30 @@ pub fn run() -> Result<()> {
         ));
     }
 
-    merge_tree(target_dir_path, output_path, cli.with_outlines)?;
+    let mut main_doc = get_merged_tree_doc(target_dir_path, cli.with_outlines)?;
+
+    main_doc.compress();
+
+    if std::fs::exists(output_path)? {
+        return Err(anyhow!(
+            "A file '{}' is already present",
+            output_path.display()
+        ));
+    } else {
+        let mut buffer = Vec::new();
+        main_doc.save_modern(&mut buffer)?;
+        std::fs::write(output_path, buffer)?;
+        println!("Output document saved as '{}'", output_path.display());
+    }
 
     Ok(())
 }
 
-fn merge_tree(
-    target_dir_path: impl AsRef<Path>,
-    output_path: impl AsRef<Path>,
-    with_outlines: bool,
-) -> Result<()> {
+fn get_merged_tree_doc(target_dir_path: impl AsRef<Path>, with_outlines: bool) -> Result<Document> {
     let target_dir_path = target_dir_path.as_ref();
-    let output_path = output_path.as_ref();
-
-    let mut main_doc = Document::with_version("1.7");
 
     info!("Initialising main document");
+    let mut main_doc = Document::with_version("1.7");
     initialise_doc_with_null_pages(&mut main_doc)?;
 
     info!("Start the merging process");
@@ -112,21 +120,7 @@ fn merge_tree(
         );
     }
 
-    main_doc.compress();
-
-    if std::fs::exists(output_path)? {
-        return Err(anyhow!(
-            "A file '{}' is already present",
-            output_path.display()
-        ));
-    } else {
-        let mut buffer = Vec::new();
-        main_doc.save_modern(&mut buffer)?;
-        std::fs::write(output_path, buffer)?;
-        println!("Output document saved as '{}'", output_path.display());
-    }
-
-    Ok(())
+    Ok(main_doc)
 }
 
 fn initialise_doc_with_null_pages(doc: &mut Document) -> Result<()> {
