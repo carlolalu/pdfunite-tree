@@ -60,7 +60,8 @@ pub fn run() -> Result<()> {
         Path::new(&target_dir_path)
     } else {
         Path::new(&target_dir_path)
-    };
+    }
+    .canonicalize()?;
 
     let output_path = cli.output_path.unwrap_or(format!(
         "{}{DEFAULT_OUTPUT_SUFFIX}",
@@ -68,7 +69,7 @@ pub fn run() -> Result<()> {
     ));
     let output_path = Path::new(&output_path);
 
-    if output_path.starts_with(target_dir_path) {
+    if output_path.starts_with(&target_dir_path) {
         return Err(anyhow!(
             "The output file cannot be a descendant of the input directory: \
             '{}' is a descendant of '{}'",
