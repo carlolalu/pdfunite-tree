@@ -57,3 +57,19 @@ On a new branch (based on this one) develop this:
     With these instrument in place I should be able to tackle my most important challenges: 
     - debug my program (understanding what is wrong in the way I build the outline)
     - Immediately understand which children does catalog have in my notes, or most of them, so to learn which are the most commmon children that my program should be able to treat (as for examplee `/Names`)
+
+
+## Tests
+
+How to implement the tests? I need a way to validate the PDFs and also to check what the outline is, but automatically. In which way to do it? I found a series of instrumens and candidates.
+
+1. Validate the pdf:
+    * pdfinfo
+    * qpdf
+    * pdftotext
+
+2. Extract the Outline
+    * pdftk
+    * pdfoutliner
+
+Any of these, if added, must be declared as a requirement for the tests on the README.md

@@ -1,5 +1,140 @@
 use anyhow::{Result, anyhow};
 use lopdf::{Document, Object, ObjectId, dictionary};
+use std::path::Path;
+use std::process::Command;
+
+/// Uses `qpdf --check`, `pdfinfo` and `pdftotext -layout` to validate the PDF file.
+pub fn validate_pdf(pdf_file_path: impl AsRef<Path>) -> Result<()> {
+    let pdf_file_path = pdf_file_path.as_ref();
+
+    // The processes are spawned in order of speed, from the slowest to the fastest.
+    let qpdf_out = Command::new("qpdf")
+        .arg("--check")
+        .arg(pdf_file_path)
+        .output()?;
+
+    let pdftotext_out = Command::new("pdftotext")
+        .arg("-layout")
+        .arg(pdf_file_path)
+        .output()?;
+
+    let pdfinfo_out = Command::new("pdfinfo").arg(pdf_file_path).output()?;
+
+    if !pdfinfo_out.status.success() {
+        return Err(anyhow!(
+            "`pdfinfo {}` returned with exit code {:?}: stdout [[{}]], stderr: [[{}]]",
+            pdf_file_path.display(),
+            pdfinfo_out.status.code(),
+            str::from_utf8(&pdfinfo_out.stdout)?,
+            str::from_utf8(&pdfinfo_out.stderr)?
+        ));
+    }
+
+    if !pdfinfo_out.status.success() {
+        return Err(anyhow!(
+            "`pdftotext {}` returned with exit code {:?}: stdout [[{}]], stderr: [[{}]]",
+            pdf_file_path.display(),
+            pdftotext_out.status.code(),
+            str::from_utf8(&pdftotext_out.stdout)?,
+            str::from_utf8(&pdftotext_out.stderr)?
+        ));
+    }
+
+    if !qpdf_out.status.success() {
+        return Err(anyhow!(
+            "`qpdf {}` returned with exit code {:?}: stdout [[{}]], stderr: [[{}]]",
+            pdf_file_path.display(),
+            qpdf_out.status.code(),
+            str::from_utf8(&qpdf_out.stdout)?,
+            str::from_utf8(&qpdf_out.stderr)?
+        ));
+    }
+
+    Ok(())
+}
+
+/// Generates an a tree of directories of `num_levels` where the last level is pdf files.
+/// The first generation has `num_siblings_this_level` children, and then each generation
+/// applies recursively the function `siblings_fn` on the `num_siblings_this_level` input
+/// to determine the future number of children. The parameter `constant_num_lateral_leaves`
+/// tells how many pdf_files have to be created on each floor (but the last one), in
+/// addition to the siblings.
+///
+/// Use with caution: if for example recursive_fn(n):=n, and we have no 'lateral leaves'
+/// then we have an n-tree. An n-tree with L levels has sum(k=0, k=L) {n^k} nodes!
+/// Furthermore if each pdf has p pages, this means p*(n^L) pdf pages in total!
+pub fn generate_fn_tree_with_levels(
+    root_pdfs: impl AsRef<Path>,
+    num_levels: u8,
+    num_siblings_this_level: u8,
+    constant_num_lateral_leaves: u8,
+    pages_per_pdf: u8,
+    siblings_fn: &impl Fn(u8) -> u8,
+) -> Result<()> {
+    let root_pdfs = root_pdfs.as_ref();
+
+    if std::fs::exists(root_pdfs)? {
+        return Err(anyhow!(
+            "The path '{}' exists already!",
+            root_pdfs.display()
+        ));
+    }
+
+    if num_levels == 0 {
+        return Ok(());
+    }
+
+    if num_siblings_this_level == 0 {
+        return Err(anyhow!(
+            "The siblings to generate are {} and the levels still to create are {}",
+            num_siblings_this_level,
+            num_levels
+        ));
+    }
+
+    std::fs::create_dir(root_pdfs)?;
+
+    if num_levels == 1 {
+        for sibling in 1..=num_siblings_this_level {
+            let pdf_name = format!("pdf_doc{}.pdf", sibling);
+            let pdf_path = format!("{}/{}", root_pdfs.display(), pdf_name);
+
+            let mut pdf_doc = get_basic_pdf_doc(&pdf_name, pages_per_pdf)?;
+
+            let mut buffer = Vec::new();
+            pdf_doc.save_modern(&mut buffer)?;
+            std::fs::write(pdf_path, &buffer)?;
+        }
+    } else {
+        for sibling in 1..=num_siblings_this_level {
+            let sibling_path = format!("{}/L{}S{}", root_pdfs.display(), num_levels, sibling);
+            if let Err(err) = generate_fn_tree_with_levels(
+                sibling_path,
+                num_levels.saturating_sub(1),
+                siblings_fn(num_siblings_this_level),
+                constant_num_lateral_leaves,
+                pages_per_pdf,
+                siblings_fn,
+            ) {
+                // If encountering any error, the function tries to clean up after itself
+                std::fs::remove_dir_all(root_pdfs)?;
+                return Err(err);
+            }
+        }
+        for lateral_leaf in 1..=constant_num_lateral_leaves {
+            let pdf_name = format!("lateral_pdf_doc{}.pdf", lateral_leaf);
+            let pdf_path = format!("{}/{}", root_pdfs.display(), pdf_name);
+
+            let mut pdf_doc = get_basic_pdf_doc(&pdf_name, pages_per_pdf)?;
+
+            let mut buffer = Vec::new();
+            pdf_doc.save_modern(&mut buffer)?;
+            std::fs::write(pdf_path, &buffer)?;
+        }
+    }
+
+    Ok(())
+}
 
 pub fn get_catalog_children_names(doc: &Document) -> Result<Vec<String>> {
     let catalog = doc.catalog()?;
