@@ -1,9 +1,6 @@
 use anyhow::{Result, anyhow};
 use clap::{Parser, Subcommand};
-use lopdf::{
-    self, Bookmark, Document, Object,
-    dictionary,
-};
+use lopdf::{self, Bookmark, Document, Object, dictionary};
 use std::path::Path;
 
 const DEV_PLAYGROUND_DIR: &str = "dev-playground";
