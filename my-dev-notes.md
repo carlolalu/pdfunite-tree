@@ -47,7 +47,7 @@ Function which acts on leafs:
 ## next ideas:
 
 On a new branch (based on this one) develop this:
-    - transform the `gen_rand_pdf` in a more general `pdf-util-by-me` or some other adapted name, where the generation of random pdfs is a subcommand
+    - transform the `gen_rand_pdf` in a more general `pdf-util-by-me` or some other adapted name, where the generation of random pdfs is a subcommand (update: this idea is not good, there is already a tool called `pdfalyzer` which can output the whole PDF tree in colors, my tool would just be a toy version of it)
     - on this branch you might want to develop a couple of programs more to: 
         * visualise which children does catalog have. Example: does catalog have the subtree `/Names`? let us use the cmd line utility to print all those children there
         * visualise specific subtree of the PDF document as the command tree does. For example if we would like to visualise the subtree `Outlines` we would like to see the subtree of all objects `Outline` with dereferenced locations, title etc.. This might be interesting for the key `Pages` or similar.
