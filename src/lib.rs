@@ -485,4 +485,39 @@ mod test {
 
         Ok(())
     }
+
+    #[test]
+    fn merge_fails_if_pdfs_with_toc() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merge_fails_if_pdfs_with_toc")?;
+        let root_tree = format!("{test_dir}/root_pdfs");
+
+        let identity_function = |n: u8| n;
+        utils::generate_fn_tree_with_levels(&root_tree, 3, 2, 0, 4, &identity_function)?;
+
+        let output_path = format!("{root_tree}.pdf");
+        let mut main_doc = get_merged_tree_doc(root_tree, true)?;
+        main_doc.compress();
+        main_doc.save(&output_path)?;
+
+        assert!(get_merged_tree_doc(test_dir, true).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn merge_fails_if_non_pdf_files() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merge_fails_if_non_pdf_files")?;
+        let root_tree = format!("{test_dir}/root_pdfs");
+
+        let identity_function = |n: u8| n;
+        utils::generate_fn_tree_with_levels(&root_tree, 3, 2, 0, 4, &identity_function)?;
+
+        let text_file_path = format!("{root_tree}/text_file.txt");
+        let random_text = utils::craft_random_text_of_len(20);
+        std::fs::write(text_file_path, random_text.as_bytes())?;
+
+        assert!(get_merged_tree_doc(root_tree, true).is_err());
+
+        Ok(())
+    }
 }

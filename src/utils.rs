@@ -240,7 +240,7 @@ fn append_random_page_to_doc(
     Ok(page_id)
 }
 
-fn craft_random_text_of_len(char_length: usize) -> String {
+pub fn craft_random_text_of_len(char_length: usize) -> String {
     use rand::distr::{SampleString, StandardUniform};
     let random_string: String = StandardUniform.sample_string(&mut rand::rng(), char_length);
     random_string
