@@ -282,16 +282,6 @@ mod test {
         Ok(())
     }
 
-    #[test]
-    fn get_doc_10_pages() -> Result<()> {
-        let document = utils::get_basic_pdf_doc("doc_name", 10)?;
-        let len = document.get_pages().len();
-
-        assert_eq!(len, 10);
-
-        Ok(())
-    }
-
     fn get_virgin_test_dir(dir_name: impl AsRef<Path>) -> Result<String> {
         let dir_path = format!("{TEST_DIR}/{}", dir_name.as_ref().display());
 

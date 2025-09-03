@@ -110,3 +110,18 @@ fn craft_random_text_of_len(char_length: usize) -> String {
     let random_string: String = StandardUniform.sample_string(&mut rand::rng(), char_length);
     random_string
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn get_doc_10_pages() -> Result<()> {
+        let document = get_basic_pdf_doc("doc_name", 10)?;
+        let len = document.get_pages().len();
+
+        assert_eq!(len, 10);
+
+        Ok(())
+    }
+}
