@@ -31,6 +31,8 @@ On a new branch (based on this one) develop this:
     - debug my program (understanding what is wrong in the way I build the outline)
     - Immediately understand which children does catalog have in my notes, or most of them, so to learn which are the most commmon children that my program should be able to treat (as for examplee `/Names`)
 
+    Watching my notes of SDE, I see that many pdf docs produced do implement the tree `/Names` and `OpenAction`. I maybe also would like a flag to ignore the child `Metadata`. I would like, in case of failure, that the tool still continues to say me which files and in which location are giving me problems, and what type of problem (which feature is problematic). Idea, implement a trait Tree (or search online if somebody has done it) and let the tool print the tree of the folder, with in red the locations giving problmes, and under each location the problem it encountered (presence of some broken feature? not a pdf file?)
+
 
 ## Tests
 
