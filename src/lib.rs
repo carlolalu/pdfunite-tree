@@ -374,4 +374,116 @@ mod test {
         std::fs::create_dir_all(&dir_path)?;
         Ok(dir_path)
     }
+
+    #[test]
+    fn merged_with_outline_and_save_modern_is_faulty_pdf() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merged_with_outline_and_save_modern_is_faulty_pdf")?;
+        let target_dir_path = format!("{test_dir}/root_pdfs");
+        let output_path = format!("{target_dir_path}.pdf");
+        let compressed_output_path = format!("{target_dir_path}-compressed.pdf");
+        let with_outlines = true;
+
+        let minus_one = |n: u8| n - 1;
+        utils::generate_fn_tree_with_levels(&target_dir_path, 3, 4, 2, 4, &minus_one)?;
+
+        let mut main_doc = get_merged_tree_doc(target_dir_path, with_outlines)?;
+
+        {
+            let mut buffer = Vec::new();
+            main_doc.save_modern(&mut buffer)?;
+            std::fs::write(&output_path, buffer)?;
+
+            main_doc.compress();
+
+            let mut buffer = Vec::new();
+            main_doc.save_modern(&mut buffer)?;
+            std::fs::write(&compressed_output_path, buffer)?;
+        }
+
+        assert!(utils::validate_pdf(&output_path).is_err());
+        assert!(utils::validate_pdf(&compressed_output_path).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn merged_without_outline_and_save_modern_is_faulty_pdf() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merged_without_outline_and_save_modern_is_faulty_pdf")?;
+        let target_dir_path = format!("{test_dir}/root_pdfs");
+        let output_path = format!("{target_dir_path}.pdf");
+        let compressed_output_path = format!("{target_dir_path}-compressed.pdf");
+        let with_outlines = false;
+
+        let minus_one = |n: u8| n - 1;
+        utils::generate_fn_tree_with_levels(&target_dir_path, 3, 4, 2, 4, &minus_one)?;
+
+        let mut main_doc = get_merged_tree_doc(target_dir_path, with_outlines)?;
+
+        {
+            let mut buffer = Vec::new();
+            main_doc.save_modern(&mut buffer)?;
+            std::fs::write(&output_path, buffer)?;
+
+            main_doc.compress();
+
+            let mut buffer = Vec::new();
+            main_doc.save_modern(&mut buffer)?;
+            std::fs::write(&compressed_output_path, buffer)?;
+        }
+
+        assert!(utils::validate_pdf(&output_path).is_err());
+        assert!(utils::validate_pdf(&compressed_output_path).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn merged_with_outline_and_save_is_ok() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merged_with_outline_and_save_is_ok")?;
+        let target_dir_path = format!("{test_dir}/root_pdfs");
+        let output_path = format!("{target_dir_path}.pdf");
+        let compressed_output_path = format!("{target_dir_path}-compressed.pdf");
+        let with_outlines = true;
+
+        let minus_one = |n: u8| n - 1;
+        utils::generate_fn_tree_with_levels(&target_dir_path, 3, 4, 2, 4, &minus_one)?;
+
+        let mut main_doc = get_merged_tree_doc(target_dir_path, with_outlines)?;
+
+        main_doc.save(&output_path)?;
+
+        main_doc.compress();
+
+        main_doc.save(&compressed_output_path)?;
+
+        utils::validate_pdf(&output_path)?;
+        utils::validate_pdf(&compressed_output_path)?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn merged_without_outline_and_save_is_ok() -> Result<()> {
+        let test_dir = get_virgin_test_dir("merged_without_outline_and_save_is_ok")?;
+        let target_dir_path = format!("{test_dir}/root_pdfs");
+        let output_path = format!("{target_dir_path}.pdf");
+        let compressed_output_path = format!("{target_dir_path}-compressed.pdf");
+        let with_outlines = false;
+
+        let minus_one = |n: u8| n - 1;
+        utils::generate_fn_tree_with_levels(&target_dir_path, 3, 4, 2, 4, &minus_one)?;
+
+        let mut main_doc = get_merged_tree_doc(target_dir_path, with_outlines)?;
+
+        main_doc.save(&output_path)?;
+
+        main_doc.compress();
+
+        main_doc.save(&compressed_output_path)?;
+
+        utils::validate_pdf(&output_path)?;
+        utils::validate_pdf(&compressed_output_path)?;
+
+        Ok(())
+    }
 }
