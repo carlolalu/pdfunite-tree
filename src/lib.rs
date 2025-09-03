@@ -87,9 +87,7 @@ pub fn run() -> Result<()> {
             output_path.display()
         ));
     } else {
-        let mut buffer = Vec::new();
-        main_doc.save_modern(&mut buffer)?;
-        std::fs::write(output_path, buffer)?;
+        main_doc.save(output_path)?;
         println!("Output document saved as '{}'", output_path.display());
     }
 
