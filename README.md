@@ -19,3 +19,4 @@ Online there are tools to manage pdfs (e.g. [`HandyOutliner`](https://handyoutli
 
 If you want to run the tests you will need to install these command line tool:
 - `qpdf`, `pdfinfo` and `pdftotext` for checking the pdf validity
+- todo for checking that the outline of the output corresponds to the expected one
