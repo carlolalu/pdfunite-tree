@@ -1,15 +1,12 @@
 pub mod utils;
 
 use anyhow::{Result, anyhow};
-use clap::Parser;
 use lazy_static::lazy_static;
 use log::{info, trace};
 use lopdf::{Bookmark, Document, Object, dictionary};
 use std::path::Path;
 
 const MAX_DEPTH_PDF_TREE: u8 = 5;
-const DEFAULT_OUTPUT_SUFFIX: &str = "-united.pdf";
-
 const DEFAULT_TEXT_FORMAT: u32 = 0;
 const UNINITIALISED_PAGE_ID: (u32, u16) = (0, 0);
 const BLACK_COLOR_RGB: [f32; 3] = [0f32; 3];
@@ -22,8 +19,10 @@ lazy_static! {
             .collect();
 }
 
-
-fn get_merged_tree_doc(target_dir_path: impl AsRef<Path>, with_outlines: bool) -> Result<Document> {
+pub fn get_merged_tree_doc(
+    target_dir_path: impl AsRef<Path>,
+    with_outlines: bool,
+) -> Result<Document> {
     let target_dir_path = target_dir_path.as_ref();
 
     info!("Initialising main document");

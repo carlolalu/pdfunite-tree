@@ -1,4 +1,10 @@
-use pdfunite_tree::run;
+use pdfunite_tree::*;
+
+use anyhow::{Result, anyhow};
+use clap::Parser;
+use std::path::Path;
+
+const DEFAULT_OUTPUT_SUFFIX: &str = "-united.pdf";
 
 /// Merge together all the PDFs in the input directory and its subdirectories (max 5 levels) into a single document.
 /// If the flag `with-outlines`` is activated, the output file will be provided with a ToC (Table of Contents)
