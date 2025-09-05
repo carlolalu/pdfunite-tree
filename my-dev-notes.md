@@ -1,48 +1,21 @@
 # Development notes
 
-To achieve my goals I have two options:
-
-1. Writing a program which calls the right command line tools automatically, with the correct arguments etc... In this sense my program would only be a shell automatization, and thus every programming language would suit the purpose. If I choose this road I could use the occasion to learn a bit of `bash` coding, but also python, julia and rust would be perfect.
-2. Write a program which does everything on its own framework, without calling external tools. This would be the most elegant and efficient solution. Here the languages do influence the outcome.
-
-## outline of solution 1 (bash?)
-
-I scan the rootfolder and all the ones below. I check that I do not go over 4 levels deep. I validate the entries:
-- I check that all entries are either folders or pdf files.
-- I call `pdfinfo` on each file and check that at the voices `Custom Metadata` and `metadata stream` there is the option `No`
-
-I then register the number of pages of each pdf file and the order of the pdfs (alphabetical?). I build consequently the input file for the ToC to be made with `pdftocgen`
-
-I call then the command line tool `pdfunite` in such a way that all pdfs are attached. I then create the ToC with the `pdftocgen`.
-
-If I want also the initial index I can write a markdown file with such index, render it with `pandoc` and then append it to the beginning of the file and move all the number of pages accordingly in the ToC.
-
-Notice that this solution is complete, meaning that all the plan is outlined.
-
-## solution with lopdf and Rust
-
-1. Parse the cli option (flag to add the index page(s) in the beginning, flag to convert automatically the `xopp` files encountered)
-2. Pass the cli to a run function
-3. the run function creates a main doc and initialises it. Then passes the main_doc, the root folder and the options to a function called 'merge_from_directory'. This is meant to act as the recersive function on tree nodes, on which we need a condition to halt recursion. 
-
-Function which acts on nodes:
-    If encounters a files calls the function to be called on leaves: merge_doc (main_doc, parent_bookmark, file (as path or as name?), flag for xopp files)
-    if encounters a directory or a symlink: it calls itself if an halt condition of max_tree_depth is respected, otherwise it yields error
-
-Function which acts on leafs:
-    Checks that the file is `.pdf` marked and tries to open it
-
 ## Extra
 
 1. Add a feature to add a Page (or a series of pages) with the table of contents in the beginning.
 2. write a small script to convert all your xournal files to pdf: https://github.com/xournalpp/xournalpp/issues/681, and then concatenate this alltogether. But this does not seem a good idea: my notes in xopp files do have an index in the beginnning, and this needs to be extrapolated and followed to create an outline following the personalised and written by hand content with `pdftoc.gen`
 3. Make the generation of the outline an optional feature
+4. flag to convert automatically the `xopp` files encountered in pdf and merge them in the process
+5. If an error is returned because of a pdf file, the tool should collect all errors encountered, and print a the filesystem tree with the faulty entries colored in red and with the error message under them.
+6. In case of success the app should also remind at the user that the tool to invert the process is `pdf-toc-split` (or how is it called)
+7. Add support to treat the `Names` child of Catalog
+8. Add support to ignore spcific features (non-supported catalog children) input by the user
 
 ## Executable names
 
 - for `pdfunite-tree` it would be more optimal to be *maybe* `pdfunite3`, but this could be ambigous, even if shorter. Otherwise
 
-- `gen_rand_pdf` is not really useful to anybody else and it is obvious that the doc generated is random, thus I could call it simply `gen-pdf`
+- for commands create by me would be maybe good if they would be prefixed always with the pronoun `my-`. This would make much easier to modify them, and eventually erase them, without risking tomisunderstand them with builtin commands
 
 ## next ideas:
 
